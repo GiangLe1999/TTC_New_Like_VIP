@@ -59,60 +59,70 @@ def receive_money(driver):
 
 # Vòng lặp chính
 def perform_task(account, round_count):
+    print(f"Initializing task for account: {account['name']}")
     driver = init_driver(account)
     completed_round = 0
 
-    # Điều hướng tới trang đăng nhập
+    print(f"Navigating to login page for account: {account['name']}")
     driver.get("https://tuongtaccheo.com/index.php")
     
-
-    # Chờ đến khi ô nhập mật khẩu xuất hiện và có placeholder chứa '*'
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, "//input[@id='password' and contains(@placeholder, '*')]"))
-    )
-    
-    # Tìm nút đăng nhập
     try:
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//input[@id='password' and contains(@placeholder, '*')]"))
+        )
+        
+        print("Looking for login button...")
         login_button = driver.find_element(By.XPATH, "//input[@name='submit' and @type='submit' and contains(@value, 'ĐĂNG NHẬP')]")
         login_button.click()
+        
     except NoSuchElementException:
         print("Lỗi: Không tìm thấy nút ĐĂNG NHẬP.")
         return False
-    
+    except Exception as e:
+        print(f"Unexpected error during login: {e}")
+        return False
+
     time.sleep(5)
     driver.get("https://tuongtaccheo.com/kiemtien/likepostvipcheo/")
+    print("Navigated to Like Post VIP page.")
 
     while completed_round < round_count:
+        print(f"Starting round {completed_round + 1} of {round_count}...")
         try:
             time.sleep(10)
             buttons = driver.find_elements(By.XPATH, "//button[contains(@onclick, 'like')]")
-            for button in buttons:
-                button.click()
-                time.sleep(2)  # Đợi tab mở
-                driver.switch_to.window(driver.window_handles[1])  # Chuyển sang tab mới
-                like_post(driver)  # Like bài viết
-                driver.close()  # Đóng tab mới
-                driver.switch_to.window(driver.window_handles[0])  # Quay về tab chính
-                receive_money(driver)  # Nhận tiền
+            print(f"Found {len(buttons)} like buttons.")
 
-            # Tăng số vòng lặp đã hoàn thành
+            for i, button in enumerate(buttons):
+                button.click()
+                time.sleep(2)
+                driver.switch_to.window(driver.window_handles[1])
+                like_post(driver)
+                print("Post liked successfully!")
+                driver.close()
+                driver.switch_to.window(driver.window_handles[0])
+                receive_money(driver)
+
             completed_round += 1
 
-            # Tải lại danh sách nếu chưa hoàn thành đủ vòng
             if completed_round < round_count:
+                print("Reloading task list for the next round...")
                 reload_button = driver.find_element(By.ID, "tailai")
                 reload_button.click()
-                time.sleep(5)  # Đợi danh sách tải lại
+                time.sleep(5)
 
         except Exception as e:
-            print(f"Error occurred: {e}")
+            print(f"Error occurred during round {completed_round + 1}: {e}")
             break
 
-    driver.quit()  # Đóng trình duyệt sau khi hoàn thành
+    print(f"Completed all {round_count} rounds for account: {account['name']}")
+    driver.quit()
+    print("Driver closed.")
+
 
 
 # Số lần lặp
-round_count = 2
+round_count = 5
 
 # Thực thi
 for account in accounts:
