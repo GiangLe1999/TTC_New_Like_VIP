@@ -11,9 +11,39 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 # Cấu hình tài khoản
 accounts = [
     {
-        "name": "D17CQQT01",
+        "name": "legiangbmt017",
+        "chrome_path": "C:\\Others\\Facebook Accounts\\legiangbmt017\\GoogleChromePortable\\GoogleChromePortable.exe",
+        "user_data_dir": "C:\\Others\\Facebook Accounts\\legiangbmt017\\GoogleChromePortable\\Data\\profile\\Default",
+    },
+    {
+        "name": "n17dcqt014",
         "chrome_path": "C:\\Others\\Facebook Accounts\\n17dcqt014\\GoogleChromePortable\\GoogleChromePortable.exe",
         "user_data_dir": "C:\\Others\\Facebook Accounts\\n17dcqt014\\GoogleChromePortable\\Data\\profile\\Default",
+    },
+    # {
+    #     "name": "caytienbmt05",
+    #     "chrome_path": "C:\\Others\\Facebook Accounts\\caytienbmt05\\GoogleChromePortable\\GoogleChromePortable.exe",
+    #     "user_data_dir": "C:\\Others\\Facebook Accounts\\caytienbmt05\\GoogleChromePortable\\Data\\profile\\Default",
+    # },
+    # {
+    # "name": "caytienbmt02", # Đang checkpoint
+    #     "chrome_path": "C:\\Others\\Facebook Accounts\\caytienbmt02\\GoogleChromePortable\\GoogleChromePortable.exe",
+    #     "user_data_dir": "C:\\Others\\Facebook Accounts\\caytienbmt02\\GoogleChromePortable\\Data\\profile\\Default",
+    # },
+    # {
+    #     "name": "thanhtruong1691",
+    #     "chrome_path": "C:\\Others\\Facebook Accounts\\thanhtruong1691\\GoogleChromePortable\\GoogleChromePortable.exe",
+    #     "user_data_dir": "C:\\Others\\Facebook Accounts\\thanhtruong1691\\GoogleChromePortable\\Data\\profile\\Default",
+    # },
+    {
+        "name": "caytienbmt09",
+        "chrome_path": "C:\\Others\\Facebook Accounts\\caytienbmt09\\GoogleChromePortable\\GoogleChromePortable.exe",
+        "user_data_dir": "C:\\Others\\Facebook Accounts\\caytienbmt09\\GoogleChromePortable\\Data\\profile\\Default",
+    },
+    {
+        "name": "lttskda",
+        "chrome_path": "C:\\Others\\Facebook Accounts\\lttskda\\GoogleChromePortable\\GoogleChromePortable.exe",
+        "user_data_dir": "C:\\Others\\Facebook Accounts\\lttskda\\GoogleChromePortable\\Data\\profile\\Default",
     },
 ]
 
@@ -37,13 +67,24 @@ def like_post(driver):
         time.sleep(5)
         # Chờ cho khối div có class cụ thể xuất hiện
         like_buttons = driver.find_elements(By.XPATH, "//div[contains(@class, 'x1i10hfl x1qjc9v5 xjbqb8w xjqpnuy xa49m3k xqeqjp1 x2hbi6w x13fuv20 xu3j5b3 x1q0q8m5 x26u7qi x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xdl72j9 x2lah0s xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r x2lwn1j xeuugli xexx8yu x4uap5 x18d9i69 xkhd6sd x1n2onr6 x16tdsg8 x1hl2dhg x1ja2u2z x1t137rt x1o1ewxj x3x9cwd x1e5q0jg x13rtm0m x3nfvp2 x1q0g3np x87ps6o x1lku1pv x1a2a7pz x5ve5x3')]")
-
-        # Lấy thẻ div thứ 2
         second_div = like_buttons[1]
         
-        # Thực hiện click vào thẻ div thứ 2
         second_div.click()
         time.sleep(2)
+
+        # Kiểm tra có bị hạn chế hoạt động không
+        try:
+            # Tìm thẻ span có chứa đoạn text cụ thể
+            restricted_message = "Bạn không thể làm một hay nhiều việc như bình thường do hoạt động trên tài khoản của bạn không tuân thủ Tiêu chuẩn cộng đồng của chúng tôi."
+            span_to_check = driver.find_elements(By.XPATH, f"//span[contains(text(), '{restricted_message}')]")
+            if span_to_check:  # Nếu tìm thấy span với đoạn text cụ thể
+                print("Thông báo hạn chế hoạt động đã xuất hiện.")
+                return False
+        except Exception as e:
+            print(f"Error checking span: {e}")
+            return False
+
+        return True  # Nếu không tìm thấy thẻ span, trả về True
     except Exception as e:
         print(f"An error occurred: {e}")
         pass
@@ -97,7 +138,13 @@ def perform_task(account, round_count):
                 button.click()
                 time.sleep(2)
                 driver.switch_to.window(driver.window_handles[1])
-                like_post(driver)
+
+                # Gọi hàm like_post và kiểm tra kết quả
+                if not like_post(driver):  # Nếu hàm trả về False
+                    print("Stopping loop as like_post returned False.")
+                    completed_round = round_count  # Gán completed_round bằng round_count
+                    break  # Dừng vòng lặp
+
                 print("Post liked successfully!")
                 driver.close()
                 driver.switch_to.window(driver.window_handles[0])
