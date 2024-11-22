@@ -10,11 +10,11 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # Cấu hình tài khoản
 accounts = [
-    {
-        "name": "legiangbmt017",
-        "chrome_path": "C:\\Others\\Facebook Accounts\\legiangbmt017\\GoogleChromePortable\\GoogleChromePortable.exe",
-        "user_data_dir": "C:\\Others\\Facebook Accounts\\legiangbmt017\\GoogleChromePortable\\Data\\profile\\Default",
-    },
+    # {
+    #     "name": "legiangbmt017",
+    #     "chrome_path": "C:\\Others\\Facebook Accounts\\legiangbmt017\\GoogleChromePortable\\GoogleChromePortable.exe",
+    #     "user_data_dir": "C:\\Others\\Facebook Accounts\\legiangbmt017\\GoogleChromePortable\\Data\\profile\\Default",
+    # },
     {
         "name": "n17dcqt014",
         "chrome_path": "C:\\Others\\Facebook Accounts\\n17dcqt014\\GoogleChromePortable\\GoogleChromePortable.exe",
@@ -65,29 +65,38 @@ def init_driver(account):
 def like_post(driver):
     try:
         time.sleep(5)
-        # Chờ cho khối div có class cụ thể xuất hiện
-        like_buttons = driver.find_elements(By.XPATH, "//div[contains(@class, 'x1i10hfl x1qjc9v5 xjbqb8w xjqpnuy xa49m3k xqeqjp1 x2hbi6w x13fuv20 xu3j5b3 x1q0q8m5 x26u7qi x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xdl72j9 x2lah0s xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r x2lwn1j xeuugli xexx8yu x4uap5 x18d9i69 xkhd6sd x1n2onr6 x16tdsg8 x1hl2dhg x1ja2u2z x1t137rt x1o1ewxj x3x9cwd x1e5q0jg x13rtm0m x3nfvp2 x1q0g3np x87ps6o x1lku1pv x1a2a7pz x5ve5x3')]")
-        second_div = like_buttons[1]
+        # Lấy URL hiện tại của tab
+        current_url = driver.current_url
         
-        second_div.click()
+        # Xác định class dựa trên URL (Nút Like trên tất cả các Page đều có class giống nhau ngoại trừ nút Like trên page Reel)
+        if "reel" in current_url:
+            like_buttons = driver.find_elements(By.XPATH, "//div[contains(@class, 'x1i10hfl xjqpnuy xa49m3k xqeqjp1 x2hbi6w x13fuv20 xu3j5b3 x1q0q8m5 x26u7qi x1ypdohk xdl72j9 x2lah0s xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r x2lwn1j xeuugli x16tdsg8 x1hl2dhg xggy1nq x1ja2u2z x1t137rt x1q0g3np x87ps6o x1lku1pv x1a2a7pz x6s0dn4 xzolkzo x12go9s9 x1rnf11y xprq8jg x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x78zum5 xl56j7k xexx8yu x4uap5 x18d9i69 xkhd6sd x1n2onr6 x1vqgdyp x100vrsf x1qhmfi1')]")
+        else:
+            like_buttons = driver.find_elements(By.XPATH, "//div[contains(@class, 'x1i10hfl x1qjc9v5 xjbqb8w xjqpnuy xa49m3k xqeqjp1 x2hbi6w x13fuv20 xu3j5b3 x1q0q8m5 x26u7qi x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xdl72j9 x2lah0s xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r x2lwn1j xeuugli xexx8yu x4uap5 x18d9i69 xkhd6sd x1n2onr6 x16tdsg8 x1hl2dhg x1ja2u2z x1t137rt x1o1ewxj x3x9cwd x1e5q0jg x13rtm0m x3nfvp2 x1q0g3np x87ps6o x1lku1pv x1a2a7pz x5ve5x3')]")
+
+        # Chọn nút Like dựa trên số lượng tìm thấy và URL
+        if len(like_buttons) == 1:
+            like_button = like_buttons[0]  # Chỉ có một nút
+        elif "watch" in current_url:  # Nếu URL chứa từ "watch"
+            like_button = like_buttons[0]
+        else:
+            like_button = like_buttons[1]  # Chọn nút thứ hai nếu có nhiều hơn một
+        
+        like_button.click()
         time.sleep(2)
 
         # Kiểm tra có bị hạn chế hoạt động không
-        try:
-            # Tìm thẻ span có chứa đoạn text cụ thể
-            restricted_message = "Bạn không thể làm một hay nhiều việc như bình thường do hoạt động trên tài khoản của bạn không tuân thủ Tiêu chuẩn cộng đồng của chúng tôi."
-            span_to_check = driver.find_elements(By.XPATH, f"//span[contains(text(), '{restricted_message}')]")
-            if span_to_check:  # Nếu tìm thấy span với đoạn text cụ thể
-                print("Thông báo hạn chế hoạt động đã xuất hiện.")
-                return False
-        except Exception as e:
-            print(f"Error checking span: {e}")
+        # Tìm thẻ span có chứa đoạn text cụ thể
+        restricted_message = "Bạn không thể làm một hay nhiều việc như bình thường do hoạt động trên tài khoản của bạn không tuân thủ Tiêu chuẩn cộng đồng của chúng tôi."
+        span_to_check = driver.find_elements(By.XPATH, f"//span[contains(text(), '{restricted_message}')]")
+        if span_to_check:  # Nếu tìm thấy span với đoạn text cụ thể
+            print("Thông báo hạn chế hoạt động đã xuất hiện.")
             return False
 
         return True  # Nếu không tìm thấy thẻ span, trả về True
     except Exception as e:
         print(f"An error occurred: {e}")
-        pass
+        return True
 
 # Tìm và nhấn nút "Nhận tiền"
 def receive_money(driver):
@@ -112,7 +121,6 @@ def perform_task(account, round_count):
             EC.presence_of_element_located((By.XPATH, "//input[@id='password' and contains(@placeholder, '*')]"))
         )
         
-        print("Looking for login button...")
         login_button = driver.find_element(By.XPATH, "//input[@name='submit' and @type='submit' and contains(@value, 'ĐĂNG NHẬP')]")
         login_button.click()
         
@@ -125,7 +133,6 @@ def perform_task(account, round_count):
 
     time.sleep(5)
     driver.get("https://tuongtaccheo.com/kiemtien/likepostvipcheo/")
-    print("Navigated to Like Post VIP page.")
 
     while completed_round < round_count:
         print(f"Starting round {completed_round + 1} of {round_count}...")
